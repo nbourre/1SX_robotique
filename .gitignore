@@ -1,0 +1,119 @@
+# Created by https://www.toptal.com/developers/gitignore/api/platformio,visualstudiocode,processing
+# Edit at https://www.toptal.com/developers/gitignore?templates=platformio,visualstudiocode,processing
+
+### PlatformIO ###
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+.pio
+
+### Processing ###
+.DS_Store
+applet
+application.linux-arm64
+application.linux-armv6hf
+application.linux32
+application.linux64
+application.windows32
+application.windows64
+application.macosx
+out
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# Support for Project snippet scope
+.vscode/*.code-snippets
+
+# Ignore code-workspaces
+*.code-workspace
+
+# End of https://www.toptal.com/developers/gitignore/api/platformio,visualstudiocode,processing
+
+app/bin/
+app/pde.jar
+build/macosx/work/
+arduino-core/bin/
+arduino-core/arduino-core.jar
+hardware/arduino/bootloaders/caterina_LUFA/Descriptors.o
+hardware/arduino/bootloaders/caterina_LUFA/Descriptors.lst
+hardware/arduino/bootloaders/caterina_LUFA/Caterina.sym
+hardware/arduino/bootloaders/caterina_LUFA/Caterina.o
+hardware/arduino/bootloaders/caterina_LUFA/Caterina.map
+hardware/arduino/bootloaders/caterina_LUFA/Caterina.lst
+hardware/arduino/bootloaders/caterina_LUFA/Caterina.lss
+hardware/arduino/bootloaders/caterina_LUFA/Caterina.elf
+hardware/arduino/bootloaders/caterina_LUFA/Caterina.eep
+hardware/arduino/bootloaders/caterina_LUFA/.dep/
+build/*.zip
+build/*.tar.bz2
+build/windows/work/
+build/windows/*.zip
+build/windows/*.tgz
+build/windows/*.tar.bz2
+build/windows/libastylej*
+build/windows/liblistSerials*
+build/windows/arduino-*.zip
+build/windows/dist/*.tar.gz
+build/windows/dist/*.tar.bz2
+build/windows/launch4j-*.tgz
+build/windows/launch4j-*.zip
+build/windows/launcher/launch4j
+build/windows/WinAVR-*.zip
+build/macosx/arduino-*.zip
+build/macosx/dist/*.tar.gz
+build/macosx/dist/*.tar.bz2
+build/macosx/*.tar.bz2
+build/macosx/libastylej*
+build/macosx/appbundler*.jar
+build/macosx/appbundler*.zip
+build/macosx/appbundler
+build/macosx/appbundler-1.0ea-arduino?
+build/macosx/appbundler-1.0ea-arduino*.zip
+build/macosx/appbundler-1.0ea-upstream*.zip
+build/linux/work/
+build/linux/dist/*.tar.gz
+build/linux/dist/*.tar.bz2
+build/linux/*.tgz
+build/linux/*.tar.xz
+build/linux/*.tar.bz2
+build/linux/*.zip
+build/linux/libastylej*
+build/linux/liblistSerials*
+build/shared/arduino-examples*
+build/shared/reference*.zip
+build/shared/Edison*.zip
+build/shared/Galileo*.zip
+build/shared/WiFi101-Updater-ArduinoIDE-Plugin*.zip
+test-bin
+*.iml
+.idea
+.DS_Store
+.directory
+hardware/arduino/avr/libraries/Bridge/examples/XivelyClient/passwords.h
+avr-toolchain-*.zip
+/app/nbproject/private/
+/arduino-core/nbproject/private/
+/app/build/
+/arduino-core/build/
+
+manifest.mf
+nbbuild.xml
+nbproject
