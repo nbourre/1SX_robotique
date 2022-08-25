@@ -1,4 +1,4 @@
-int ledPin = 2;
+int ledPin = 13;
 
 unsigned long cT;
 
@@ -7,8 +7,5 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(ledPin, 1);
-  delay(100);
-  digitalWrite(ledPin, 0);
-  delay(100);
+  analogWrite(ledPin, 10) ;
 }
