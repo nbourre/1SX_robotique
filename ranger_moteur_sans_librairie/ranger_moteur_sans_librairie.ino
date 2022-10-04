@@ -6,8 +6,8 @@
  * @description  this file is sample code for the mBot Ranger kit
  */
 
-//enum State {DRIVING, TURN, STOP, MAX_STATE};
-enum State {DRIVING, STOP, MAX_STATE};
+enum State {DRIVING, TURN, STOP, MAX_STATE};
+//enum State {DRIVING, STOP, MAX_STATE};
 
 State currentState = STOP;
 
@@ -52,6 +52,9 @@ void loop() {
     case DRIVING:
       ReduceSpeed();
       break;
+    case TURN:
+      TurnRight();
+      break;
     case STOP:
       Stop();      
       break;
@@ -74,6 +77,9 @@ void printState() {
       break;
     case STOP:
       Serial.println ("STOPPED");
+      break;
+    case TURN:
+      Serial.println ("TURNING");
       break;
     default:
       Serial.println ("UNKNOWNED STATE");
