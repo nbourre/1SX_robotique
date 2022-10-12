@@ -13,9 +13,9 @@
  *
  * \par Method List:
  *
- *    1. void MeDCMotor::setpin(uint8_t ena, uint8_t enb, uint8_t pwm_pin)
- *    2. void MeDCMotor::run(int16_t speed)
- *    3. void MeDCMotor::stop(void)
+ *    1. void AurigaMotor::setpin(uint8_t ena, uint8_t enb, uint8_t pwm_pin)
+ *    2. void AurigaMotor::run(int16_t speed)
+ *    3. void AurigaMotor::stop(void)
  *
  * \par History:
  * <pre>
@@ -85,6 +85,8 @@ public:
  *   None
  */
   void setpin(uint8_t ena_pin, uint8_t enb_pin, uint8_t pwm_pin);
+
+  void rampUp();
 
 
 /**

@@ -51,8 +51,7 @@ void AurigaMotor::run(int16_t speed)
     digitalWrite(ena, LOW);
     digitalWrite(enb, HIGH);    
     analogWrite(pwm, -speed);
-  } 
-    
+  }     
 }
 
 void AurigaMotor::stop() {
