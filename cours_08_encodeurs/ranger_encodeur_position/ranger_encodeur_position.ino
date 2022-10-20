@@ -14,27 +14,32 @@ unsigned long movePrevious = 0;
 int moveDelay = 5000;
 int moveCounter = 0;
 
+volatile long position_pulsation = 0;
+
+float goal = 0.0;
+
+volatile long position_pulsation = 0;
+
+float goal = 0.0;
+
 MeEncoderOnBoard Encoder_1(SLOT1);
 
-void isr_process_encoder1(void)
+void interruption_encodeur_1(void)
 {
   if(digitalRead(Encoder_1.getPortB()) == 0)
   {
     Encoder_1.pulsePosMinus();
+    position_pulsation--;
   }
   else
   {
-    Encoder_1.pulsePosPlus();;
+    Encoder_1.pulsePosPlus();
+    position_pulsation++;
   }
 }
 
-
-void setup()
-{
-  attachInterrupt(Encoder_1.getIntNum(), isr_process_encoder1, RISING);
-  Serial.begin(115200);
-  
-  // DÉBUT : Ne pas modifier ce code!
+void configureEncoders() {
+    // DÉBUT : Ne pas modifier ce code!
   // Configuration de la fréquence du PWM
   // Copier-coller ce code si on désire
   // travailler avec les encodeurs
@@ -54,52 +59,51 @@ void setup()
 
 }
 
-void serialTask() {
+void setup()
+{
+  attachInterrupt(Encoder_1.getIntNum(), interruption_encodeur_1, RISING);
+  Serial.begin(115200);
+  
+  configureEncoders();
+}
+
+void serialOutputTask() {
   if (cT - serialPrevious < serialDelay) {
     return;
   }
   
   serialPrevious = cT;
-  
-  // Afficher la position du "curseur"
-  Serial.print("Position 1:");
+    
+  // Afficher les informations sur
+  // le Serial Plotter
+  Serial.print("Goal:");
+  Serial.print(goal);
+  Serial.print(",CurrentPosition:");
   Serial.print(Encoder_1.getCurPos());
-  Serial.print(",Pulse:");
-  Serial.print(Encoder_1.getPulsePos());
-  Serial.print(",isTarReached:");
-  Serial.print(Encoder_1.isTarPosReached());
-  Serial.print(",distanceToGo:");
+  Serial.print(",Distance:");
   Serial.println(Encoder_1.distanceToGo());
 }
 
-void moveTask() {
-  if (cT - movePrevious < moveDelay) {
-    return;
-  }  
-
-  movePrevious = cT;
-  Encoder_1.setPulsePos(0);
-
-  Encoder_1.moveTo(ENC_PULSE * ENC_RATIO);
-  moveCounter++;
-}
-
-void gotoDistance(float distance) {
-  float nbTours = distance / CIRC;
-  float nbPulses = nbTours * ENC_PULSE * ENC_RATIO;
-
-  Encoder_1.moveTo(nbPulses);
-
+// Fonction pour lire les commandes reçues par série
+void readSerialCommand() {
+  if (!Serial.available()) return;
   
+  // Permet de convertir une valeur reçue en float.
+  goal = Serial.parseFloat();
+  
+  Serial.print("New goal : ");
+  Serial.println(goal);
+  
+  Encoder_1.moveTo(goal);
 }
 
 void loop()
 {
   cT = millis();
-
-  gotoDistance(100.0);
-
+  
+  readSerialCommand();
+  
   Encoder_1.loop();
-  serialTask();
+  serialOutputTask();
 }
 
