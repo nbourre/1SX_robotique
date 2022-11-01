@@ -72,8 +72,8 @@ void configureEncoders() {
   encoderRight.setPulse(9);
   encoderLeft.setRatio(39.267);
   encoderRight.setRatio(39.267);
-  encoderLeft.setPosPid(0.18,0,0);
-  encoderRight.setPosPid(0.18,0,0);
+  encoderLeft.setPosPid(1.8,0,1.2);
+  encoderRight.setPosPid(1.8,0,1.2);
   encoderLeft.setSpeedPid(0.18,0,0);
   encoderRight.setSpeedPid(0.18,0,0);
 }
@@ -127,8 +127,8 @@ void forwardTask() {
     Serial.print("Left pos :");
     Serial.println(encoderLeft.getPulsePos());
     taskBegin = false;
-    encoderLeft.runSpeed(-255);
-    encoderRight.runSpeed(255);
+    encoderLeft.runSpeed(-100);
+    encoderRight.runSpeed(100);
   }
 }
 
@@ -143,8 +143,8 @@ void idleTask() {
 
 void rightTask() {
   if (taskBegin) {
-    encoderLeft.move(ninetyDegree, 200);
-    encoderRight.move(ninetyDegree, 200);
+    encoderLeft.move(ninetyDegree, 255);
+    encoderRight.move(ninetyDegree, 255);
     taskBegin = false;
   }  
 }
