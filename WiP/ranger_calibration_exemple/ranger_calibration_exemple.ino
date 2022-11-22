@@ -11,8 +11,10 @@ int soundSamples = 1024;
 int soundBase = 0;
 int sampleCount = 0;
 
+int soundDiff = 0;
+
 unsigned long serialPrintPrevious = 0;
-int serialPrintInterval = 2000;
+int serialPrintInterval = 100;
 
 
 void calibrate() {
@@ -32,8 +34,12 @@ void calibrate_enter() {
   soundBase = 0;
 }
 
-void run() {
+void soundTest() {
+  soundDiff = analogRead(soundPin) - soundBase;
+}
 
+void run() {
+ soundTest();
 }
 
 void setup() {
@@ -65,6 +71,7 @@ void serialPrintTask() {
   serialPrintPrevious = currentTime;
 
   Serial.print("soundBase:");
-  Serial.println(soundBase);
-  
+  Serial.print(soundBase);
+  Serial.print(",soundDiff:");
+  Serial.println(soundDiff);
 }
