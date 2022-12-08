@@ -1,26 +1,27 @@
 #include <MeAuriga.h>
 
 #define BATTMAX 613 // 7.2v/12v * 1023
-
-
-enum TaskState {IDLE, SQUARE, CIRCLE, MAX_TASKSTATE};
-enum MoveState {STOP, FORWARD, BACKWARD, LEFT, RIGHT, MAX_MOVESTATE};
-
-TaskState currentTaskState = IDLE;
-MoveState currentMoveState = STOP;
-
-unsigned long movePrevious = 0;
-int moveDelay = 500;
+#define DIST_WHEEL 151
+#define DIA_WHEEL 64.5
+#define PULSE 9
+#define RATIO 39.267
+#define FULL_TURN_CIRC 474.4
+#define FULL_SPIN_CIRC 237.2
+#define CIRC_WHEEL 202.6
 
 int battLevel = 0; // Niveau de la batterie
 
-MeLineFollower lineFollower(PORT_9);
+unsigned long currentTime = 0;
+
 MeEncoderOnBoard encoderRight(SLOT1);
 MeEncoderOnBoard encoderLeft(SLOT2);
 
-int moveSpeed = 60;
+int moveSpeed = 100;
 
-unsigned long currentTime = 0;
+unsigned long movePrevious = 0;
+int moveDelay = 2000;
+
+int moveDir = 1;
 
 unsigned long serialPrevious = 0;
 int serialInterval = 500;
@@ -30,91 +31,39 @@ void setup() {
   Serial.begin(115200);
   
   encoderSetup();
-  
-  currentTaskState = SQUARE;
 }
 
 void loop() {
   currentTime = millis();
   
-  switch (currentTaskState) {
-    case SQUARE:
-      square();
-      break;
-    case CIRCLE:
-      circle();
-      break;
-    default:
-      idle();
-  }
+  if (currentTime - movePrevious >= moveDelay) {
+    movePrevious = currentTime;
     
+    moveForward (200 * moveDir);
+    moveDir *= -1;
+  }
+  
+  msg = encoderLeft.distanceToGo(); // Pour afficher le nombre de degrés restant
+  
+  encoderLoop();
   serialPrintTask();
 }
 
-int movementSequence = 0;
-bool movementStart = false;
+// Doit toujours être appelé pour se mettre à jour
+void encoderLoop() {
+  encoderLeft.loop();
+  encoderRight.loop();
+}
 
-void square(){
-  if (currentTime - movePrevious < moveDelay) return;
+// Permet d'indiquer au robot d'avancer à une distance précise
+bool moveForward(int dist) {
+  float distance = dist / CIRC_WHEEL * 360;
   
-  movePrevious = currentTime;
-   
-  switch (movementSequence) {
-    case 0:
-      forward();
-      // Passer à la prochaine séquence après le temps;
-      movementSequence = (movementSequence + 1) % 2; 
-      break;
-    case 1:
-      TurnRight():
-      break;
-    default:
-      break;  
-  }
-}
+  encoderLeft.move(distance);
+  encoderRight.move(-distance);
 
-void circle() {
-  
-}
-
-void idle() {
-  
-}
-
-void stopState() {
-  
-}
-
-
-void Forward() {
-  encoderLeft.setMotorPwm(moveSpeed);  
-  encoderRight.setMotorPwm(-moveSpeed);  
-}
-
-void TurnLeft() {
-  encoderLeft.setMotorPwm(moveSpeed / 2);  
-  encoderRight.setMotorPwm(-moveSpeed);
-}
-
-
-void TurnRight() {
-  encoderLeft.move()
-  encoderRight.move(0);
-}
-
-void Backward() {
-  encoderLeft.setMotorPwm(-moveSpeed / 2);  
-  encoderRight.setMotorPwm(moveSpeed);  
-}
-
-void Stop() {
-  encoderLeft.setMotorPwm(0);  
-  encoderRight.setMotorPwm(0);  
-}
-
-void Spin() {
-  encoderLeft.setMotorPwm(moveSpeed);  
-  encoderRight.setMotorPwm(moveSpeed);  
+  // Juste pour afficher la distance
+  msg = String(distance);
 }
 
 // Fonction d'interruption pour le moteur droit
@@ -155,15 +104,18 @@ void encoderSetup() {
   TCCR2A = _BV(WGM21) | _BV(WGM20);
   TCCR2B = _BV(CS21);
   
+  encoderRight.setPulse(PULSE);
+  encoderLeft.setPulse(PULSE);
+  
+  encoderRight.setRatio(RATIO);
+  encoderLeft.setRatio(RATIO);
+  
   encoderRight.setPosPid(1.8,0,1.2);
   encoderLeft.setPosPid(1.8,0,1.2);
+  
   encoderRight.setSpeedPid(0.18,0,0);
   encoderLeft.setSpeedPid(0.18,0,0);
   
-  // // Pour le capteur de ligne, nous n'avons pas besoin
-  // // de gérer le PId des moteurs
-  // encoderRight.setMotionMode(DIRECT_MODE);
-  // encoderLeft.setMotionMode(DIRECT_MODE);
 }
 
 // Retourne le pourcentage de la batterie
@@ -171,7 +123,6 @@ int getBattLevel() {
   int value = analogRead(A4);
   return (int)((value * 100.0) / BATTMAX);
 }
-
 
 void serialPrintTask() {
   if (currentTime - serialPrevious < serialInterval) return;
