@@ -5,8 +5,8 @@
 #define DIA_WHEEL 64.5
 #define PULSE 9
 #define RATIO 39.267
-#define FULL_TURN_CIRC 474.4
-#define FULL_SPIN_CIRC 237.2
+#define FULL_TURN_CIRC 948.8
+#define FULL_SPIN_CIRC 474.4
 #define CIRC_WHEEL 202.6
 
 int battLevel = 0; // Niveau de la batterie
@@ -40,7 +40,7 @@ void loop() {
   if (currentTime - movePrevious >= moveDelay) {
     movePrevious = currentTime;
     
-    moveForward (200 * moveDir);
+    spin (115 * moveDir);
     moveDir *= -1;
   }
   
@@ -57,7 +57,7 @@ void encoderLoop() {
 }
 
 // Permet d'indiquer au robot d'avancer à une distance précise
-bool moveForward(int dist) {
+void moveForward(int dist) {
   float distance = dist / CIRC_WHEEL * 360;
   
   encoderLeft.move(distance);
@@ -66,6 +66,31 @@ bool moveForward(int dist) {
   // Juste pour afficher la distance
   msg = String(distance);
 }
+
+// Permet de faire pivoter le robot
+// ATTENTION, IL Y A DU FROTTEMENT À PRENDRE
+// EN CONSIDÉRATION, IL FAUDRA P-E AUGMENTER
+// L'ANGLE POUR COMPENSER
+void spin(int goal) {
+  //On multiplie par 1.0 pour faire une division
+  float ratioSpin = (goal * 1.0) / 360;
+  
+  // Distance à parcourir
+  float dist = ratioSpin * FULL_SPIN_CIRC;
+  
+  // Nombre de rotations de chaque roue
+  float nbRots = dist/CIRC_WHEEL;
+  
+  // On multiplie par 360 pour obtenir
+  // le nombre de degrés
+  float angleLeft = nbRots * 360;
+  float angleRight = angleLeft;
+  
+  encoderLeft.move(angleLeft);
+  encoderRight.move(angleRight);
+}
+
+
 
 // Fonction d'interruption pour le moteur droit
 void encoderRight_interrupt(void)
