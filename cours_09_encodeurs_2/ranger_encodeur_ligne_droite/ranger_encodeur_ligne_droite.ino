@@ -8,7 +8,7 @@ enum DriveState {IDLE, FORWARD, RIGHT, MAX_DRIVE_STATE};
 ModeState currentModeState = AUTO;
 DriveState currentDriveState = IDLE;
 
-unsigned long cT = 0; // currentTime
+unsigned long currentTime = 0; // currentTime
 
 MeEncoderOnBoard encoderLeft(SLOT1);
 MeEncoderOnBoard encoderRight(SLOT2);
@@ -89,7 +89,7 @@ void setup()
 
 void loop()
 {
-  cT = millis();
+  currentTime = millis();
   
   serialInputTask();
   
@@ -166,8 +166,8 @@ void autoState() {
       break;    
   }
   
-  if (cT - autoPrevious >= autoInterval) {
-    autoPrevious = cT;
+  if (currentTime - autoPrevious >= autoInterval) {
+    autoPrevious = currentTime;
     currentDriveState = (currentDriveState + 1) % MAX_DRIVE_STATE;
     
     printDriveState();
@@ -219,7 +219,7 @@ void serialInputTask() {
         speed = 0;
         currentModeState = AUTO;
         currentDriveState = IDLE;
-        autoPrevious = cT;
+        autoPrevious = currentTime;
         Serial.println("Mode automatique activé");
         break;
       case '1':
@@ -264,9 +264,9 @@ void encodersTask() {
 
 void serialOutputTask() {
   return;
-  if (cT - printPrevious < printInterval) return;
+  if (currentTime - printPrevious < printInterval) return;
   
-  printPrevious = cT;
+  printPrevious = currentTime;
   
   Serial.print("Speed 1:");
   Serial.print(encoderLeft.getCurrentSpeed());

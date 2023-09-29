@@ -5,18 +5,7 @@
 #define DIA 65.0
 #define CIRC 20.2
 
-unsigned long cT = 0;
-
-unsigned long serialPrevious = 0;
-int serialDelay = 250;
-
-unsigned long movePrevious = 0;
-int moveDelay = 5000;
-int moveCounter = 0;
-
-volatile long position_pulsation = 0;
-
-float goal = 0.0;
+unsigned long currentTime = 0;
 
 volatile long position_pulsation = 0;
 
@@ -67,12 +56,25 @@ void setup()
   configureEncoders();
 }
 
-void serialOutputTask() {
-  if (cT - serialPrevious < serialDelay) {
-    return;
-  }
+void loop()
+{
+  currentTime = millis();
   
-  serialPrevious = cT;
+  readSerialCommand();
+  
+  // Important! Permet de mettre à jour l'encodeur
+  Encoder_1.loop();
+
+  serialOutputTask(currentTime);
+}
+
+void serialOutputTask(unsigned long cT) {
+  unsigned long lastTime = 0;
+  const int rate = 250;
+
+  if (cT - lastTime < rate) return;
+  
+  lastTime = currentTime;
     
   // Afficher les informations sur
   // le Serial Plotter
@@ -96,14 +98,3 @@ void readSerialCommand() {
   
   Encoder_1.moveTo(goal);
 }
-
-void loop()
-{
-  cT = millis();
-  
-  readSerialCommand();
-  
-  Encoder_1.loop();
-  serialOutputTask();
-}
-

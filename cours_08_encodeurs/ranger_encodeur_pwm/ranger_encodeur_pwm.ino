@@ -1,6 +1,6 @@
 #include <MeAuriga.h>
 
-unsigned long cT = 0;
+unsigned long currentTime = 0;
 
 unsigned long serialPrevious = 0;
 unsigned long serialDelay = 250;
@@ -38,11 +38,11 @@ void setup()
 }
 
 void serialTask() {
-  if (cT - serialPrevious < serialDelay) {
+  if (currentTime - serialPrevious < serialDelay) {
     return;
   }
   
-  serialPrevious = cT;
+  serialPrevious = currentTime;
   
   Serial.print("Vitesse 1:");
   Serial.println(Encoder_1.getCurrentSpeed());
@@ -50,7 +50,7 @@ void serialTask() {
 
 void loop()
 {
-  cT = millis();
+  currentTime = millis();
   
   if(Serial.available())
   {

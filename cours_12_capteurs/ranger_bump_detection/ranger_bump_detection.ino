@@ -1,7 +1,7 @@
 #include <MeAuriga.h>
 #include <Wire.h>
 
-unsigned long cT = 0;
+unsigned long currentTime = 0;
 
 MeGyro gyro(0, 0x69); // Constructeur
 
@@ -23,8 +23,8 @@ void gyroTask() {
 
   ax = gyro.getAngleX();
 
-  if (cT - bumpPrevious >= bumpInterval){
-    bumpPrevious = cT;
+  if (currentTime - bumpPrevious >= bumpInterval){
+    bumpPrevious = currentTime;
 
     dx = abs((ax - axp) * 10);
     axp = ax;
@@ -45,9 +45,9 @@ void serialOutputTask() {
   }
 
 
-  if (cT - serialPrevious < serialInterval ) return;
+  if (currentTime - serialPrevious < serialInterval ) return;
 
-  serialPrevious = cT;
+  serialPrevious = currentTime;
 
   // Tache d'impression ici
 }
@@ -60,7 +60,7 @@ void setup()
 
 void loop()
 {
-  cT = millis();
+  currentTime = millis();
 
   gyroTask();
   serialOutputTask();

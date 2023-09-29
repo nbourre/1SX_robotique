@@ -1,6 +1,6 @@
 #include <MeAuriga.h>
 
-unsigned long cT = 0;
+unsigned long currentTime = 0;
 
 unsigned long serialPrevious = 0;
 unsigned long serialDelay = 250;
@@ -38,11 +38,11 @@ void setup()
 }
 
 void serialTask() {
-  if (cT - serialPrevious < serialDelay) {
+  if (currentTime - serialPrevious < serialDelay) {
     return;
   }
   
-  serialPrevious = cT;
+  serialPrevious = currentTime;
   
   // Afficher la position du "curseur"
   Serial.print("Position 1:");
@@ -53,7 +53,7 @@ void serialTask() {
 
 void loop()
 {
-  cT = millis();
+  currentTime = millis();
   
   Encoder_1.loop();
   serialTask();
