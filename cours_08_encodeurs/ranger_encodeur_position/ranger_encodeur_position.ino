@@ -10,6 +10,7 @@ unsigned long currentTime = 0;
 volatile long position_pulsation = 0;
 
 float goal = 0.0;
+String serialInput = "";
 
 MeEncoderOnBoard Encoder_1(SLOT1);
 
@@ -69,16 +70,17 @@ void loop()
 }
 
 void serialOutputTask(unsigned long cT) {
-  unsigned long lastTime = 0;
+  static unsigned long lastTime = 0;
   const int rate = 250;
 
   if (cT - lastTime < rate) return;
-  
-  lastTime = currentTime;
+
+  lastTime = cT;
     
   // Afficher les informations sur
   // le Serial Plotter
-  Serial.print("Goal:");
+
+  Serial.print("\tGoal:");
   Serial.print(goal);
   Serial.print(",CurrentPosition:");
   Serial.print(Encoder_1.getCurPos());
@@ -89,12 +91,18 @@ void serialOutputTask(unsigned long cT) {
 // Fonction pour lire les commandes reçues par série
 void readSerialCommand() {
   if (!Serial.available()) return;
+
+  // serialInput = Serial.readString();
+  // Serial.print ("echo : " );
+  // Serial.println (serialInput);
   
   // Permet de convertir une valeur reçue en float.
-  goal = Serial.parseFloat();
+  serialInput = Serial.readString();
+  goal = serialInput.toFloat();
   
   Serial.print("New goal : ");
   Serial.println(goal);
   
-  Encoder_1.moveTo(goal);
+  
+  Encoder_1.moveTo((long)goal);
 }
