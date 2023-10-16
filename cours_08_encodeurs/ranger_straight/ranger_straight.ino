@@ -1,3 +1,8 @@
+// Demonstrate how to use the gyro and encoders to go straight
+// using a PD controller to correct the angle
+// The application use a simple state machine to change the state
+// Author: Nicolas Bourré
+
 #include <MeAuriga.h>
 
 enum AppState {STOP, STRAIGHT, TURNING};
@@ -128,15 +133,13 @@ void goStraight(short speed = 100, short firstRun = 0) {
     static double previousError = 0.0;
     static double output = 0;
     
+    // PD Controller
     // Change these values to suit your needs
     // higher kp = more reactive, might have oscillation
     // lowewr kp = sluggish, but less oscillation
-    const double kp = 3.0;
-    
     // higher kd = limit oscillation, the right value stops oscillation
-    const double kd = 1.0;
-    
-    const double precision = 0.1;
+    const double kp = 3.0;
+    const double kd = 1.0;    
     
     if (firstRun) {
       gyro.resetData();
