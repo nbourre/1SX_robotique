@@ -125,7 +125,6 @@ void encodersTask(unsigned long ct) {
   encoderLeft.loop();
 }
 
-
 void goStraight(short speed = 100, short firstRun = 0) {
     static double zAngleGoal = 0.0;
     
@@ -142,9 +141,9 @@ void goStraight(short speed = 100, short firstRun = 0) {
     const double kd = 1.0;    
     
     if (firstRun) {
-      gyro.resetData();
-      zAngleGoal = gyro.getAngleZ();
       firstRun = 0;
+
+      zAngleGoal = gyro.getAngleZ();
       Serial.println ("Setting speed");
       
       encoderLeft.setTarPWM(speed);
@@ -155,7 +154,8 @@ void goStraight(short speed = 100, short firstRun = 0) {
     
     error = gyro.getAngleZ() - zAngleGoal;
     
-    // Google : PID
+    // Google : ELI5 PID
+    // Astuce web : ELI5 = Explain Like I'm 5
     output = kp * error + kd * (error - previousError);
     
     previousError = error;        
@@ -171,7 +171,6 @@ void goStraight(short speed = 100, short firstRun = 0) {
     
     encoderLeft.setTarPWM(speed - output);
     encoderRight.setTarPWM(-speed - output);
-    
 }
 
 void stopCmd() {
