@@ -142,7 +142,6 @@ void goStraight(short speed = 100, short firstRun = 0) {
     const double kd = 1.0;    
     
     if (firstRun) {
-      gyro.resetData();
       zAngleGoal = gyro.getAngleZ();
       firstRun = 0;
       Serial.println ("Setting speed");
