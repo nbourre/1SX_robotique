@@ -4,11 +4,16 @@
 // Author: Nicolas Bourré
 
 #include <MeAuriga.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 enum AppState {STOP, STRAIGHT, TURNING};
 
 AppState currentState = STOP;
 
+unsigned long currentTime = 0;
+
+#define DEBUGGING 0
 #define DIST_WHEEL 151
 #define DIA_WHEEL 64.5
 #define PULSE 9
@@ -17,12 +22,17 @@ AppState currentState = STOP;
 #define FULL_SPIN_CIRC 474.4
 #define CIRC_WHEEL 202.6
 
+#define SCREEN_WIDTH 128 // Largeur de l'écran OLED, en pixels
+#define SCREEN_HEIGHT 64 // Hauteur de l'écran OLED, en pixels
+#define OLED_RESET     -1 // Numéro de la broche de réinitialisation (ou -1 si partageant la broche de réinitialisation de l'Arduino)
+#define SCREEN_ADDRESS 0x3C ///< Voir la fiche technique pour l'adresse;
+
 MeGyro gyro(0, 0x69);
 
 MeEncoderOnBoard encoderRight(SLOT1);
 MeEncoderOnBoard encoderLeft(SLOT2);
 
-unsigned long currentTime = 0;
+Adafruit_SSD1306 screen(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 unsigned long serialPrintPrevious = 0;
 int serialPrintInterval = 500;
@@ -84,6 +94,24 @@ void encoderConfig() {
   // FIN : Ne pas modifier ce code!
 }
 
+void screenConfig() {
+  if (!screen.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println ("Screen failed to initialize...");
+    return;
+  }
+
+  screen.clearDisplay();
+
+  screen.setTextSize(1);      // Normal 1:1 pixel scale
+  screen.setTextColor(SSD1306_WHITE); // Draw white text
+  screen.setCursor(0, 0);     // Start at top-left corner
+  screen.cp437(true);         // Use full 256 char 'Code Page 437' font 
+
+  screen.println("Booting..."); 
+  screen.display();
+
+
+}
 
 void setup() {
   Serial.begin(115200);
@@ -91,9 +119,17 @@ void setup() {
   gyro.begin();
   
   // Waiting 3 sec before start
-  Serial.println("Waiting 3 sec");
+  printScreenSerial("Boot and wait for 3 sec...");
   delay (3000);
   straightCmd();
+}
+
+void printScreenSerial(const char * msg) {
+  Serial.println(msg);
+
+  screen.clearDisplay();
+  screen.println(msg);
+  screen.display();
 }
 
 void loop() {
@@ -138,8 +174,8 @@ void goStraight(short speed = 100, short firstRun = 0) {
     // higher kp = more reactive, might have oscillation
     // lowewr kp = sluggish, but less oscillation
     // higher kd = limit oscillation, the right value stops oscillation
-    const double kp = 3.0;
-    const double kd = 1.0;    
+    const double kp = 20.0;
+    const double kd = 4.0;    
     
     if (firstRun) {
 
@@ -159,7 +195,8 @@ void goStraight(short speed = 100, short firstRun = 0) {
     output = kp * error + kd * (error - previousError);
     
     previousError = error;        
-    
+
+#if DEBUGGING    
     msg = "z : ";
     msg += gyro.getAngleZ();
     msg += "\tleft : ";
@@ -168,7 +205,8 @@ void goStraight(short speed = 100, short firstRun = 0) {
     msg += encoderRight.getCurPwm();
     msg += "\toutput :";
     msg += output;
-    
+#endif
+
     encoderLeft.setTarPWM(speed - output);
     encoderRight.setTarPWM(-speed - output);
     
@@ -186,6 +224,10 @@ void straightCmd() {
  
   currentState = STRAIGHT;
   goStraight(100, 1);
+}
+
+void testCmd() {
+  screen
 }
 
 void stopState() { 
@@ -207,6 +249,9 @@ void serialEvent() {
         break;
       case '1':
         straightCmd();
+        break;
+      case 't':
+        testCmd();
         break;
     }
   }
