@@ -8,8 +8,9 @@ MeLineFollower lineFollower(PORT_9);
 MeEncoderOnBoard encoderRight(SLOT1);
 MeEncoderOnBoard encoderLeft(SLOT2);
 
-int moveSpeed = 120;
+int moveSpeed = 75;
 int lineFollowFlag = 0;
+int error = 0;
 
 unsigned long currentTime = 0;
 
@@ -30,24 +31,28 @@ void loop() {
   
   switch (lines) {
     case S1_IN_S2_IN:
+      error = 0;
       Forward();
-      lineFollowFlag=10;
-      msg = "S1 et S2 voit la ligne";
+      msg = "GAUCHE et DROITE voit la ligne";
       break;
     case S1_IN_S2_OUT:
-      if (lineFollowFlag<1) lineFollowFlag--;
-      msg = "S1 voit la ligne et S2 ne voit pas la ligne";
-      TurnLeft();
+      error--;
+      speedAdjust(moveSpeed, error);
+      msg = "GAUCHE voit la ligne et DROITE ne voit pas la ligne";
       break;
     case S1_OUT_S2_IN:
-    if (lineFollowFlag<20) lineFollowFlag++;
-      msg = "S1 ne voit pas la ligne et S2 voit la ligne";
-      TurnRight();
+      error++;
+      speedAdjust(moveSpeed, error);
+      msg = "GAUCHE ne voit pas la ligne et DROITE voit la ligne";
       break;
     case S1_OUT_S2_OUT:
-      if(lineFollowFlag==10) Backward();
-      if(lineFollowFlag<10) TurnLeft();
-      if(lineFollowFlag>10) TurnRight();
+      if (error < 0) {
+        SpinRight();
+      } else if (error > 0) {
+        SpinLeft();
+      } else {
+        Backward();
+      }
       msg = "Les deux capteurs ne voit pas la ligne";
       break;
   }
@@ -57,6 +62,10 @@ void loop() {
   
 }
 
+void speedAdjust(int speed, int error) {
+  encoderLeft.setMotorPwm(speed + error);  
+  encoderRight.setMotorPwm(-speed + error);   
+}
 
 void Forward() {
   encoderLeft.setMotorPwm(moveSpeed);  
@@ -78,9 +87,14 @@ void Backward() {
   encoderRight.setMotorPwm(moveSpeed);  
 }
 
-void Spin() {
+void SpinRight() {
   encoderLeft.setMotorPwm(moveSpeed);  
-  encoderRight.setMotorPwm(moveSpeed);  
+  encoderRight.setMotorPwm(0);  
+}
+
+void SpinLeft() {
+  encoderLeft.setMotorPwm(-0);  
+  encoderRight.setMotorPwm(-moveSpeed);  
 }
 
 // Fonction d'interruption pour le moteur droit
