@@ -116,7 +116,6 @@ void encoderSetup() {
   
   encoderRight.setSpeedPid(0.18,0,0);
   encoderLeft.setSpeedPid(0.18,0,0);
-  
 }
 
 // Retourne le pourcentage de la batterie

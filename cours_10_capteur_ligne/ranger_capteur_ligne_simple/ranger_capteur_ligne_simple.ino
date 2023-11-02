@@ -1,6 +1,7 @@
 #include <MeAuriga.h>
 
-#define BATTMAX 613 // 7.2v/12v * 1023
+// Src : Firmware --> 1023 / 1.5
+#define BATTMAX 682 // 7.2v/12v * 1023
 
 int battLevel = 0; // Niveau de la batterie
 
@@ -8,8 +9,7 @@ MeLineFollower lineFollower(PORT_9);
 MeEncoderOnBoard encoderRight(SLOT1);
 MeEncoderOnBoard encoderLeft(SLOT2);
 
-int moveSpeed = 255;
-
+int moveSpeed = 100;
 
 unsigned long currentTime = 0;
 
@@ -27,18 +27,18 @@ void loop() {
   currentTime = millis();
   
   byte lines = lineFollower.readSensors();
-  
+
   switch (lines) {
     case S1_IN_S2_IN:
       Forward();
-      msg = "S1 et S2 voit la ligne";
+      msg = "GAUCHE et DROITE voit la ligne";
       break;
     case S1_IN_S2_OUT:
-      msg = "S1 voit la ligne et S2 ne voit pas la ligne";
+      msg = "GAUCHE voit la ligne et DROITE ne voit pas la ligne";
       TurnLeft();
       break;
     case S1_OUT_S2_IN:
-      msg = "S1 ne voit pas la ligne et S2 voit la ligne";
+      msg = "GAUCHE ne voit pas la ligne et DROITE voit la ligne";
       TurnRight();
       break;
     case S1_OUT_S2_OUT:
@@ -46,16 +46,15 @@ void loop() {
       msg = "Les deux capteurs ne voit pas la ligne";
       break;
   }
-  
+
+  encodersTask();
   serialPrintTask();
-  
-  
 }
 
 
 void Forward() {
-  encoderLeft.setMotorPwm(moveSpeed);  
-  encoderRight.setMotorPwm(-moveSpeed);  
+  encoderLeft.setTarPWM(moveSpeed);  
+  encoderRight.setTarPWM(-moveSpeed);  
 }
 
 void TurnLeft() {
@@ -77,6 +76,8 @@ void Spin() {
   encoderLeft.setMotorPwm(moveSpeed);  
   encoderRight.setMotorPwm(moveSpeed);  
 }
+
+//#region <Interruption>
 
 // Fonction d'interruption pour le moteur droit
 void encoderRight_interrupt(void)
@@ -104,6 +105,8 @@ void encoderLeft_interrupt(void)
   }
 }
 
+//#endregion
+
 // Configuration des encodeurs
 void encoderSetup() {
   attachInterrupt(encoderRight.getIntNum(), encoderRight_interrupt, RISING);
@@ -120,17 +123,19 @@ void encoderSetup() {
   encoderLeft.setPosPid(1.8,0,1.2);
   encoderRight.setSpeedPid(0.18,0,0);
   encoderLeft.setSpeedPid(0.18,0,0);
-  
-  // // Pour le capteur de ligne, nous n'avons pas besoin
-  // // de gérer le PId des moteurs
-  // encoderRight.setMotionMode(DIRECT_MODE);
-  // encoderLeft.setMotionMode(DIRECT_MODE);
+  encoderRight.setMotionMode(DIRECT_MODE);
+  encoderLeft.setMotionMode(DIRECT_MODE);
 }
 
 // Retourne le pourcentage de la batterie
 int getBattLevel() {
   int value = analogRead(A4);
   return (int)((value * 100.0) / BATTMAX);
+}
+
+void encodersTask() {
+  encoderLeft.loop();
+  encoderRight.loop();
 }
 
 
