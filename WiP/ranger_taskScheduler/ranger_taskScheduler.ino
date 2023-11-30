@@ -1,5 +1,54 @@
+
+unsigned long currentTime = 0;
+
+#pragma region ROBOT DECLARATION & INITIALIZATION
 #include <MeAuriga.h>
 
+MeEncoderOnBoard encoderRight(SLOT1);
+MeEncoderOnBoard encoderLeft(SLOT2);
+MeGyro gyro(0, 0x69);
+
+int speed = 100;
+
+void isr_process_encoderRight(void)
+{
+  if(digitalRead(encoderRight.getPortB()) == 0)
+  {
+    encoderRight.pulsePosMinus();
+  }
+  else
+  {
+    encoderRight.pulsePosPlus();;
+  }
+}
+
+void isr_process_encoderLeft(void)
+{
+  if(digitalRead(encoderLeft.getPortB()) == 0)
+  {
+    encoderLeft.pulsePosMinus();
+  }
+  else
+  {
+    encoderLeft.pulsePosPlus();
+  }
+}
+
+void initEncoders() {
+  attachInterrupt(encoderRight.getIntNum(), isr_process_encoderRight, RISING);
+  attachInterrupt(encoderLeft.getIntNum(), isr_process_encoderLeft, RISING);
+
+  //Set PWM 8KHz
+  TCCR1A = _BV(WGM10);
+  TCCR1B = _BV(CS11) | _BV(WGM12);
+
+  TCCR2A = _BV(WGM21) | _BV(WGM20);
+  TCCR2B = _BV(CS21);
+}
+
+#pragma endregion
+
+#pragma region TASKSCHEDULER DECLARATION
 // Définir les options de TaskScheduler si requis
 #include <TaskScheduler.h>
 
@@ -19,6 +68,10 @@ Task taskPivot(TASK_IMMEDIATE, TASK_ONCE, &pivotCallback);
 
 Scheduler runner;
 
+#pragma endregion
+
+#pragma region SETUP AND LOOP
+
 void setup() {
   runner.init();
 
@@ -37,14 +90,53 @@ void setup() {
 }
 
 void loop() {
+  currentTime = millis();
+
+  encoderRight.loop();
+  encoderLeft.loop();
+  gyro.update();
+
   runner.execute();
 }
 
+#pragma endregion
+
+#pragma region CALLBACKS
+
 void goStraightCallback() {
-  static float currentAngle = 0.0f;
+  static double currentAngle = 0.0f;
+  static double angleGoal = 0.0f;
+  static double error = 0.0;
+  static double previousError = 0.0;
+  static double output = 0;
+  
+  // PD Controller
+  // Change these values to suit your needs
+  // higher kp = more reactive, might have oscillation
+  // lowewr kp = sluggish, but less oscillation
+  // higher kd = limit oscillation, the right value stops oscillation
+  const double kp = 3.0;
+  const double kd = 1.0;   
+
   if (taskGoStraight.isFirstIteration()) {
-    currentAngle = 
+    currentAngle = gyro.getAngleZ();
+    angleGoal = gyro.getAngleZ();
+    
+    encoderLeft.setMotorPwm(speed);
+    encoderRight.setMotorPwm(-speed);
   }
+
+  error = gyro.getAngleZ() - angleGoal;
+  
+  // Google : ELI5 PID
+  // Astuce web : ELI5 = Explain Like I'm 5
+  output = kp * error + kd * (error - previousError);
+  
+  previousError = error;        
+  
+  
+  encoderLeft.setTarPWM(speed - output);
+  encoderRight.setTarPWM(-speed - output);
 }
 
 void detectObjectCallback() {
@@ -83,3 +175,5 @@ void pivotCallback() {
     taskDetectObject.enable();
   }
 }
+
+#pragma endregion
