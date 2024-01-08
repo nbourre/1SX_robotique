@@ -1,6 +1,4 @@
 
-unsigned 
-
 #pragma region Modèles
 void xState(unsigned long cT) {
   static unsigned long lastTime = 0;
