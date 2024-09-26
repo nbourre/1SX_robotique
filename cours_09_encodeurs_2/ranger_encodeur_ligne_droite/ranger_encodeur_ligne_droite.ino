@@ -1,14 +1,21 @@
 #include <MeAuriga.h>
 
-#define BATTMAX 613 // 7.2v/12v * 1023
+#define BATT_PIN A4
+#define BATTMAX 613  // 7.2v/12v * 1023
 
-enum ModeState {AUTO, MANUAL, MAX_MODE_STATES};
-enum DriveState {IDLE, FORWARD, RIGHT, MAX_DRIVE_STATE};
+enum ModeState { AUTO,
+                 MANUAL,
+                 MAX_MODE_STATE };
+                 
+enum DriveState { IDLE,
+                  FORWARD,
+                  RIGHT,
+                  MAX_DRIVE_STATE };
 
 ModeState currentModeState = AUTO;
 DriveState currentDriveState = IDLE;
 
-unsigned long currentTime = 0; // currentTime
+unsigned long currentTime = 0;  // currentTime
 
 MeEncoderOnBoard encoderLeft(SLOT1);
 MeEncoderOnBoard encoderRight(SLOT2);
@@ -28,31 +35,18 @@ int speedPrevious = 0;
 unsigned long printPrevious = 0;
 int printInterval = 250;
 
-// Interval de changement d'état
-// pour le mode automatique
-unsigned long autoPrevious = 0;
-int autoInterval = 3000;
-
-void isr_process_encoder1(void)
-{
-  if(digitalRead(encoderLeft.getPortB()) == 0)
-  {
+void isr_process_encoder1(void) {
+  if (digitalRead(encoderLeft.getPortB()) == 0) {
     encoderLeft.pulsePosMinus();
-  }
-  else
-  {
+  } else {
     encoderLeft.pulsePosPlus();
   }
 }
 
-void isr_process_encoder2(void)
-{
-  if(digitalRead(encoderRight.getPortB()) == 0)
-  {
+void isr_process_encoder2(void) {
+  if (digitalRead(encoderRight.getPortB()) == 0) {
     encoderRight.pulsePosMinus();
-  }
-  else
-  {
+  } else {
     encoderRight.pulsePosPlus();
   }
 }
@@ -60,7 +54,7 @@ void isr_process_encoder2(void)
 void configureEncoders() {
   attachInterrupt(encoderLeft.getIntNum(), isr_process_encoder1, RISING);
   attachInterrupt(encoderRight.getIntNum(), isr_process_encoder2, RISING);
-  
+
   //Set PWM 8KHz
   TCCR1A = _BV(WGM10);
   TCCR1B = _BV(CS11) | _BV(WGM12);
@@ -72,32 +66,30 @@ void configureEncoders() {
   encoderRight.setPulse(9);
   encoderLeft.setRatio(39.267);
   encoderRight.setRatio(39.267);
-  encoderLeft.setPosPid(1.8,0,1.2);
-  encoderRight.setPosPid(1.8,0,1.2);
-  encoderLeft.setSpeedPid(0.18,0,0);
-  encoderRight.setSpeedPid(0.18,0,0);
+  encoderLeft.setPosPid(1.8, 0, 1.2);
+  encoderRight.setPosPid(1.8, 0, 1.2);
+  encoderLeft.setSpeedPid(0.18, 0, 0);
+  encoderRight.setSpeedPid(0.18, 0, 0);
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
-  
-  pinMode(A4, INPUT);
-  
+
+  pinMode(BATT_PIN, INPUT);
+
   configureEncoders();
 }
 
-void loop()
-{
+void loop() {
   currentTime = millis();
-  
+
   serialInputTask();
-  
+
   runState();
-  
+
   encodersTask();
-  
-  serialOutputTask();
+
+  serialOutputTask(currentTime);
 }
 
 int getBattLevel() {
@@ -117,69 +109,123 @@ void runState() {
 }
 
 void manualState() {
-  
 }
 
 bool taskBegin = true;
 
-void forwardTask() { 
-  if (taskBegin) {
-    Serial.print("Left pos :");
-    Serial.println(encoderLeft.getPulsePos());
-    taskBegin = false;
+void forwardState(unsigned long ct) {
+  unsigned long firstTime = true;
+  unsigned long exitTime = 0;
+  unsigned int rate = 3000;
+
+  // Entrée dans l'état
+  if (firstTime) {
+    firstTime = false;
+    exitTime = ct + rate;
+
     encoderLeft.runSpeed(-100);
     encoderRight.runSpeed(100);
+
+    Serial.println("Forward");
+    Serial.print("Left pos :");
+    Serial.println(encoderLeft.getPulsePos());
+  }
+
+  // Code de l'état
+  // Inutile dans le cas du moteur
+  // car les valeurs sont persistentes
+
+
+  // Sortie de l'état
+  bool transition = ct >= exitTime;
+
+  if (transition) {
+    firstTime = true;
+    currentDriveState = RIGHT;
   }
 }
 
-void idleTask() {
-  if (taskBegin) {
+void idleState(unsigned long ct) {
+  unsigned long firstTime = true;
+  unsigned long exitTime = 0;
+  unsigned int rate = 3000;
+
+  // Entrée dans l'état
+  if (firstTime) {
+    firstTime = false;
+    exitTime = ct + rate;
+
     speed = 0;
     speedNew = true;
-    taskBegin = false;
-  }    
+
+    Serial.println("Idle");
+  }
+
+  // Code de l'état
+  // Inutile dans le cas du moteur
+  // car les valeurs sont persistentes
+
+
+  // Sortie de l'état
+  bool transition = ct >= exitTime;
+
+  if (transition) {
+    firstTime = true;
+    currentDriveState = RIGHT;
+  }
 }
 
 
-void rightTask() {
-  if (taskBegin) {
+void rightState(unsigned long ct) {
+  unsigned long firstTime = true;
+  unsigned long exitTime = 0;
+  unsigned int rate = 3000;
+
+  // Entrée dans l'état
+  if (firstTime) {
+    firstTime = false;
+    exitTime = ct + rate;
+
     encoderLeft.move(ninetyDegree, 255);
     encoderRight.move(ninetyDegree, 255);
-    taskBegin = false;
-  }  
+
+    Serial.println("Right");
+  }
+
+  // Code de l'état
+  // Inutile dans le cas du moteur
+  // car les valeurs sont persistentes
+
+
+  // Sortie de l'état
+  bool transition = ct >= exitTime;
+
+  if (transition) {
+    firstTime = true;
+    currentDriveState = RIGHT;
+  }
 }
 
 void autoState() {
-  
+
   switch (currentDriveState) {
     case FORWARD:
-      forwardTask();
+      forwardState(currentTime);
       break;
     case IDLE:
-      idleTask();
+      idleState(currentTime);
       break;
     case RIGHT:
-      rightTask();
-      
+      rightState(currentTime);
+
       break;
     default:
-      break;    
+      break;
   }
-  
-  if (currentTime - autoPrevious >= autoInterval) {
-    autoPrevious = currentTime;
-    currentDriveState = (currentDriveState + 1) % MAX_DRIVE_STATE;
-    
-    printDriveState();
-    
-    // Drapeau pour indiquer que l'on débute une nouvelle tâche
-    taskBegin = true;    
-  }
-  
 }
 
-void printDriveState()
-{
+// Affiche l'état actuel
+void printDriveState() {
   switch (currentDriveState) {
     case FORWARD:
       Serial.println("Forward");
@@ -192,34 +238,33 @@ void printDriveState()
       break;
     default:
       break;
-    
   }
 }
 
 
-
+// Fonction qui regarde s'il y a eu une
+// entrée via le port série
 void serialInputTask() {
-  if(Serial.available())
-  {
+  if (Serial.available()) {
     char a = Serial.read();
-    
+
     // On regarde si c'est la valeur et entre 0 et 6
     if (a >= '0' && a <= '6') {
+      // On active le drapeau pour indiquer 
+      // une nouvelle vitesse
       speedNew = true;
-      
+
       if (a > '0') {
         currentModeState = MANUAL;
         Serial.println("Mode manuel activé");
       }
     }
-    
-    switch(a)
-    {
+
+    switch (a) {
       case '0':
         speed = 0;
         currentModeState = AUTO;
         currentDriveState = IDLE;
-        autoPrevious = currentTime;
         Serial.println("Mode automatique activé");
         break;
       case '1':
@@ -245,33 +290,38 @@ void serialInputTask() {
         Serial.println(getBattLevel());
         break;
       default:
-      break;
+        break;
     }
-  } 
+  }
 }
 
+// Le moteur tourne tjrs, alors je les ai
+// converti en tâche
 void encodersTask() {
-  
+
   if (speedNew) {
     encoderLeft.runSpeed(-speed);
     encoderRight.runSpeed(speed);
     speedNew = false;
   }
-  
+
   encoderLeft.loop();
   encoderRight.loop();
 }
 
-void serialOutputTask() {
-  return;
-  if (currentTime - printPrevious < printInterval) return;
+void serialOutputTask(unsigned long ct) {
+  return; // J'ignore la fonction
   
-  printPrevious = currentTime;
+  unsigned long firstTime = true;
+  unsigned long lastTime = 0;
+  unsigned int rate = 250;
   
+  if (ct - lastTime < rate) return;
+
+  lastTime = ct;
+
   Serial.print("Speed 1:");
   Serial.print(encoderLeft.getCurrentSpeed());
   Serial.print(" ,Speed 2:");
-  Serial.println(encoderRight.getCurrentSpeed());  
+  Serial.println(encoderRight.getCurrentSpeed());
 }
-
-
