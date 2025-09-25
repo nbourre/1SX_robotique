@@ -5,7 +5,7 @@
 
 #include <MeAuriga.h>
 
-enum AppState {STOP, STRAIGHT, TURNING};
+enum AppState {SETUP, STOP, STRAIGHT, TURNING};
 
 AppState currentState = STOP;
 
@@ -90,24 +90,25 @@ void setup() {
   encoderConfig();
   gyro.begin();
   
-  // Waiting 3 sec before start
-  Serial.println("Waiting 3 sec");
-  delay (3000);
-  straightCmd();
+  currentState = SETUP;
+  
 }
 
 void loop() {
   currentTime = millis();
   
   switch (currentState) {
+    case SETUP:
+      setupState(currentTime);
+      break;
     case STOP:
-      stopState();
+      stopState(currentTime);
       break;
     case STRAIGHT:
-      straightState();
+      straightState(currentTime);
       break;
     default:
-      stopState();
+      stopState(currentTime);
       break;
   }
   
@@ -133,12 +134,13 @@ void goStraight(short speed = 100, short firstRun = 0) {
     static double output = 0;
     
     // PD Controller
-    // Change these values to suit your needs
-    // higher kp = more reactive, might have oscillation
-    // lowewr kp = sluggish, but less oscillation
-    // higher kd = limit oscillation, the right value stops oscillation
-    const double kp = 3.0;
-    const double kd = 1.0;    
+    // Change les valeurs selon tes besoins
+    // higher kp = plus réactive, peu osciller
+    // lowewr kp = sluggish, moins d'oscillation
+    // higher kd = limite l'oscillation, la bonne valeur arrête l'oscillation
+    const double kp = 6.75;
+    //const double ki = 1.0;
+    const double kd = 1.0;
     
     if (firstRun) {
       firstRun = 0;
@@ -187,12 +189,34 @@ void straightCmd() {
   goStraight(100, 1);
 }
 
-void stopState() { 
+void setupState(unsigned long ct) {
+  static bool firstTime = true;
+  static unsigned long lastTime = 0;
+  static unsigned long exitTime = 0;
+  
+  const int timeout = 3000;
+  
+  if (firstTime) {
+    firstTime = false;
+    exitTime = ct + timeout;
+    
+    Serial.println("Attente de 3 secondes avant de démarrer.");
+  }
+  
+  // Là la là... j'attends
+  
+  if (ct >= exitTime) {
+    firstTime = true;
+    straightCmd();
+  }
+}
+
+void stopState(unsigned long ct) { 
   encoderLeft.setTarPWM(0);
   encoderRight.setTarPWM(0);
 }
 
-void straightState() {  
+void straightState(unsigned long ct) {  
   goStraight();
 }
 
